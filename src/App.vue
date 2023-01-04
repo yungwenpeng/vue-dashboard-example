@@ -30,6 +30,9 @@ const getPath = () => {
   const path = route.path.slice(1);
   //console.log('CurrentPath - ', path);
   if (path === '') return 'Home';
+  if (path.length > 22 ) {
+    return path[0].toLocaleUpperCase() + path.slice(1).substring(0,21) + '...';
+  }
   return path[0].toLocaleUpperCase() + path.slice(1);
 };
 </script>
@@ -39,13 +42,15 @@ const getPath = () => {
   <div id="App">
     <header class="navbar navbar-dark bg-primary">
       <div id="logo">
-        <a>
+        <a data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
           <img src="@/assets/pg-logo.png" />
         </a>
         <div class="overlay">Nagivation menu</div>
       </div>
-      <div class="container-fluid col">
-        <span id="title">{{ getPath() }}</span>
+      <div class="justify-content-start col">
+        <span id="title" class="navbar-text text-white text-truncate">
+          {{ getPath() }}
+        </span>
       </div>
       <div class="container-fluid col justify-content-end" v-if="isAuthenticated()">
         <span class="navbar-brand mb-0">Welcome {{ parseAuthUserName() }}</span>
@@ -53,8 +58,48 @@ const getPath = () => {
           <i class="bi bi-box-arrow-left"></i><span>Logout</span>
         </a>
       </div>
-
     </header>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+      <div class="offcanvas-header row">
+        <img src="@/assets/pg-logo.png" class="img-fluid" style="max-width: 170px; margin:0 auto" alt="pg-logo"
+          data-bs-dismiss="offcanvas">
+        <hr style="margin: 5px auto">
+      </div>
+      <div class="offcanvas-body">
+        <div class="h5" style="margin-top: -20px;">
+          <span v-if="isAuthenticated()">Hi {{ parseAuthUserName() }}</span>
+          <span v-else>Hi Guest</span>
+        </div>
+        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+          <li v-if="isAuthenticated()" class="nav-item">
+            <a href="/" class="nav-link link-dark" aria-current="page">
+              <i class="bi bi-house-door" style="font-size: 20px;"></i> Home
+            </a>
+          </li>
+          <li v-if="isAuthenticated()" class="nav-item">
+            <a href="/devices" class="nav-link link-dark">
+              <i class="bi bi-motherboard" style="font-size: 20px;"></i> Devices
+            </a>
+          </li>
+          <li v-if="isAuthenticated()" class="nav-item">
+            <a href="/dashboard" class="nav-link link-dark">
+              <i class="bi bi-columns" style="font-size: 20px;"></i> Dashboard
+            </a>
+          </li>
+          <li v-if="!isAuthenticated()" class="nav-item">
+            <a href="/login" class="nav-link link-dark">
+              <i class="bi bi-box-arrow-right" style="font-size: 20px;"></i> Login
+            </a>
+          </li>
+          <li v-if="isAuthenticated()" class="nav-item">
+            <a href="/login" class="nav-link link-dark" @click="userLogout">
+              <i class="bi bi-box-arrow-left" style="font-size: 20px;"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
 
     <RouterView />
   </div>
@@ -77,6 +122,7 @@ const getPath = () => {
 
 #logo {
   position: relative;
+  margin: 0 10px 0 10px;
 }
 
 .overlay {
@@ -102,5 +148,25 @@ const getPath = () => {
   text-align: start;
   padding: auto;
   color: white;
+}
+
+#offcanvasNavbar {
+  background-image: url('assets/siderbar_bg.png');
+  height: 100%;
+  min-width: 20%;
+  max-width: 40%;
+  background-repeat: no-repeat space;
+  background-position: center;
+  background-size: cover;
+}
+
+.nav-item {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nav-item:hover {
+  background-color: #ebe264;
+  border-radius: 30%;
 }
 </style>
