@@ -66,3 +66,12 @@ npm run test:e2e
 ```sh
 npm run lint
 ```
+
+### Reference  
+[Vuex](https://vuex.vuejs.org/)  
+[Axios](https://axios-http.com/docs/intro)  
+[Bootstrap & Vite](https://getbootstrap.com/docs/5.2/getting-started/vite/)  
+[Element Plus](https://element-plus.org/en-US/guide/quickstart.html)  
+  
+### Demo  
+![vue-dashboard-example](vue-dashboard-example.gif)  
