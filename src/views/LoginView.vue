@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
-import RestApiService from '../services/auth_service';
+import RestApiService from '../services/service';
 import store from "../stores/store";
 import router from "../router";
 
