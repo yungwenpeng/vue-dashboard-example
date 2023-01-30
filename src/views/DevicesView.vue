@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DeviceList from "../components/DeviceList.vue";
+import DeviceList from "../components/Devices/DeviceList.vue";
 </script>
 
 <template>

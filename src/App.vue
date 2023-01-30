@@ -44,7 +44,7 @@ const getPath = () => {
       </div>
       <div class="container-fluid col justify-content-end" v-if="isAuthenticated()">
         <a href="/login" class="nav-link text-white" @click="userLogout">
-          <i class="bi bi-box-arrow-left"></i><span>Logout</span>
+          <i class="bi bi-box-arrow-left" style="margin-right: 10px"></i><span>Logout</span>
         </a>
       </div>
     </header>
