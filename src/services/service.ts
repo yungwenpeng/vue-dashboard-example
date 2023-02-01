@@ -48,6 +48,42 @@ class RestApiService {
             }
         );
     };
+    //Returns a page of assets info objects owned by tenant.
+    getTenantAssetInfos(token: any): Promise<any> {
+        return axios.get(
+            '/api/tenant/assetInfos?pageSize=100&page=0&type=Floor',
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Authorization': 'Bearer ' + token
+                }
+            }
+        );
+    };
+    //Returns a page of assets info objects assigned to customer.
+    getCustomerAssetInfos(id: any, token: any): Promise<any> {
+        return axios.get(
+            '/api/customer/' + id + '/assetInfos?pageSize=100&page=0&type=Floor',
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Authorization': 'Bearer ' + token
+                }
+            }
+        );
+    };
+    //Returns list of relation info objects for the specified entity by the 'from' direction.
+    findRelationInfoByFrom(fromId:any, fromType:any, token:any): Promise<any>{
+        return axios.get(
+            '/api/relations/info?fromId=' + fromId + '&fromType=' + fromType,
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Authorization': 'Bearer ' + token
+                }
+            }
+        );
+    };
 }
 
 export default new RestApiService();
