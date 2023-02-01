@@ -69,9 +69,10 @@ export default defineComponent({
             //console.log('show.bs.offcanvas: this.socket: ', this.socket);
         });
     },
-    beforeUnmount(){
-        //console.log('beforeUnmount');
-        this.socket.close();
+    beforeUnmount() {
+        //console.log('DeviceList - beforeUnmount');
+        if (this.socket.readyState === WebSocket.OPEN)
+            this.socket.close();
     },
     methods: {
         pushAllDevices(role: String, data: any) {

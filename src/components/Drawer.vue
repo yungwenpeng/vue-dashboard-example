@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import store from "../stores/store";
 import jwt_decode from 'jwt-decode';
+import router from "../router";
+import * as bootstrap from "bootstrap"
 
 const isAuthenticated = () => {
     //console.log('isAuthenticated - token:', store.getters.getAuthUserToken['token']);
@@ -22,6 +24,23 @@ const userLogout = () => {
     store.commit('removeToken');
 };
 
+const hideNavbar = () => {
+    const myOffcanvas = document.getElementById('offcanvasNavbar');
+    const bsOffcanvas = bootstrap.Offcanvas.getInstance(myOffcanvas!);
+    bsOffcanvas?.hide();
+};
+
+const entryComponent = (componentName: String) => {
+    //console.log(`entryComponent - ${componentName}`);
+    if (componentName === 'logout') {
+        userLogout();
+        router.push({ name: 'login' });
+    } else {
+        router.push({ name: `${componentName}` });
+    }
+    hideNavbar();
+};
+
 </script>
 
 <template>
@@ -32,35 +51,27 @@ const userLogout = () => {
             <hr style="margin: 5px auto">
         </div>
         <div class="offcanvas-body">
-            <div class="h5" style="margin-top: -20px;">
+            <div class="h3" style="margin-top: -20px;">
                 <span v-if="isAuthenticated()">Hi {{ parseAuthUserName() }}</span>
                 <span v-else>Hi Guest</span>
             </div>
             <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-                <li v-if="isAuthenticated()" class="nav-item">
-                    <a href="/" class="nav-link link-dark" aria-current="page">
-                        <i class="bi bi-house-door" style="font-size: 20px;"></i> Home
-                    </a>
+                <li v-if="isAuthenticated()" class="nav-item" @click="entryComponent('home')">
+                    <i class="bi bi-house-door" style="font-size: 20px;"></i> Home
                 </li>
-                <li v-if="isAuthenticated()" class="nav-item">
-                    <a href="/devices" class="nav-link link-dark">
-                        <i class="bi bi-motherboard" style="font-size: 20px;"></i> Devices
-                    </a>
+                <li v-if="isAuthenticated()" class="nav-item" @click="entryComponent('devices')">
+                    <i class="bi bi-motherboard" style="font-size: 20px;"></i> Devices
                 </li>
-                <li v-if="isAuthenticated()" class="nav-item">
-                    <a href="/dashboard" class="nav-link link-dark">
-                        <i class="bi bi-columns" style="font-size: 20px;"></i> Dashboard
-                    </a>
+                <li v-if="isAuthenticated()" class="nav-item" @click="entryComponent('dashboard')">
+                    <i class="bi bi-columns" style="font-size: 20px;"></i> Dashboard
                 </li>
-                <li v-if="!isAuthenticated()" class="nav-item">
-                    <a href="/login" class="nav-link link-dark">
-                        <i class="bi bi-box-arrow-right" style="font-size: 20px;"></i> Login
-                    </a>
+                <li v-if="!isAuthenticated()" class="nav-item" @click="entryComponent('login')">
+                    <!--<a href="/login" class="nav-link link-dark">-->
+                    <i class="bi bi-box-arrow-right" style="font-size: 20px;"></i> Login
+                    <!--</a>-->
                 </li>
-                <li v-if="isAuthenticated()" class="nav-item">
-                    <a href="/login" class="nav-link link-dark" @click="userLogout">
-                        <i class="bi bi-box-arrow-left" style="font-size: 20px;"></i> Logout
-                    </a>
+                <li v-if="isAuthenticated()" class="nav-item" @click="entryComponent('logout')">
+                    <i class="bi bi-box-arrow-left" style="font-size: 20px;"></i> Logout
                 </li>
             </ul>
         </div>
@@ -79,8 +90,8 @@ const userLogout = () => {
 }
 
 .nav-item {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 400;
 }
 
 .nav-item:hover {
