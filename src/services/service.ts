@@ -84,6 +84,18 @@ class RestApiService {
             }
         );
     };
+    //Requested assets must be owned by tenant or assigned to customer which user is performing the request.
+    getAssetsByIds(assetIds: any, token:any): Promise<any>{
+        return axios.get(
+            '/api/assets?assetIds=' + assetIds,
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Authorization': 'Bearer ' + token
+                }
+            }
+        );
+    };
 }
 
 export default new RestApiService();

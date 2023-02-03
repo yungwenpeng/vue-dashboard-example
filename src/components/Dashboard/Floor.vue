@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onBeforeMount, onMounted, onBeforeUpdate, onUnmounted } from 'vue';
+import { ref, onBeforeMount, onMounted, onBeforeUpdate, onBeforeUnmount, onUnmounted } from 'vue';
 import store from "../../stores/store";
 import RestApiService from '../../services/service';
 import { wsFetchTelemetryUrl } from '../../utils/websocket';
+import router from "../../router";
 
 const props = defineProps({
     floorId: String,
@@ -14,7 +15,7 @@ const setlastesValue = ref([]);
 
 const connect = (deviceId: any) => {
     socket.value.onopen = function () {
-        console.log("websocket connected!!");
+        console.log("(Floor)websocket connected!!");
         let object = {
             tsSubCmds: [{
                 entityType: "DEVICE",
@@ -29,7 +30,7 @@ const connect = (deviceId: any) => {
         socket.value.send(data);
     };
     socket.value.onclose = (event: any) => {
-        console.log("Connection is closed!");
+        console.log("(Floor)Connection is closed!");
     };
     socket.value.onmessage = async (event: any) => {
         const message = JSON.parse(event.data).data;
@@ -41,10 +42,10 @@ const connect = (deviceId: any) => {
             data.push(createTelemetryData(key, value));
             setlastesValue.value = data;
         }
-        console.log("setlastesValue: ", JSON.stringify(setlastesValue.value));
+        console.log("(Floor)setlastesValue: ", JSON.stringify(setlastesValue.value));
     };
     socket.value.onerror = (error: any) => {
-        console.log("Connection is error :", error);
+        console.log("(Floor)Connection is error :", error);
     };
 }
 
@@ -58,7 +59,7 @@ const mouseEnter = (devices: any) => {
     });
 };
 const mouseLeave = () => {
-    //console.log(`mouseLeave`);
+    console.log(`mouseLeave - socket.readyState:${socket.value.readyState}`);
     socket.value.close();
 };
 
@@ -127,9 +128,19 @@ onMounted(() => {
     window.addEventListener('resize', resizeWindow);
     resizeWindow();
 });
+onBeforeUnmount(() => {
+    if (socket.value.readyState === WebSocket.OPEN)
+        socket.value.close();
+});
 onUnmounted(() => {
+    //console.log(`Floor - onUnmounted`);
     window.removeEventListener('resize', resizeWindow);
 });
+
+const selectRoom = (roomInfo: any) => {
+    console.log(`selectRoom: ${roomInfo['roomName']}, ${roomInfo['roomId'].slice(0, 8)} from ${props.floorId?.toString().slice(0, 8)}`);
+    router.push({ name: 'room', params: { floorId: props.floorId, roomId: roomInfo['roomId'] } });
+};
 
 </script>
 
@@ -144,7 +155,7 @@ onUnmounted(() => {
             'overflow-y': `auto`
         }">
             <div v-for="roomInfo in relationsRoomList">
-                <div class="main-content card mb-3">
+                <div class="main-content card mb-3" @click="selectRoom(roomInfo)">
                     <div class="door-hor"></div>
                     <div class="window-hor"></div>
                     <div class="bed">

@@ -43,6 +43,14 @@ const router = createRouter({
       props: true
     },
     {
+      path: "/dashboard/:floorId/:roomId",
+      // Dynamic Route Matching with Params
+      // https://router.vuejs.org/guide/essentials/dynamic-matching.html
+      name: "room",
+      component: () => import("../components/Dashboard/Room.vue"),
+      props: true
+    },
+    {
       path: "/about",
       name: "about",
       // route level code-splitting
@@ -56,11 +64,12 @@ const router = createRouter({
 // https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
 router.beforeEach(async (to, from, next) => {
   //console.log('beforeEach - getAuthUser:', store.getters['getAuthUserToken']['token']);
+  //console.log(`beforeEach - from:${from.path}, to:${to.path}`);
   if (to.path !== '/login' && store.getters['getAuthUserToken']['token'] === null) {
     next({ name: 'login' });
   } else {
     next();
   }
-})
+});
 
 export default router;
