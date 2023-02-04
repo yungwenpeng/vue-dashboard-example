@@ -8,7 +8,6 @@ import notifyStatusImagesUrl from '../../../src/assets/warnning_icon.png';
 import temperatureImageUrl from '../../../src/assets/medium-temperature-icon.png';
 import highTemperatureImageUrl from '../../../src/assets/high-temperature-warn-icon.png';
 import humidityImageUrl from '../../../src/assets/humidity-icon.png';
-import detailsImageUrl from '../../../src/assets/upload-image-icon.png';
 import { GChart } from "vue-google-charts";
 import { chartOptions } from './GoogleChartData';
 
@@ -25,6 +24,7 @@ const setlastesValue = ref([] as any);
 const isDisplayHistory = ref(false as Boolean);
 const maxLineChartCount = 12;
 const chartData = ref([] as any);
+const detailsImageUrl = ref('../../../src/assets/upload-image-icon.png');
 
 const createTelemetryData = (timestamp: any, key: any, value: any) => {
     return { timestamp, key, value };
@@ -35,7 +35,7 @@ const createFirstLineChartData = (keys: any) => {
 };
 
 const checkLineChartData = (() => {
-    if(chartData.value.length > maxLineChartCount) {
+    if (chartData.value.length > maxLineChartCount) {
         chartData.value.splice(1, 1);
     }
 });
@@ -70,6 +70,7 @@ const connect = (deviceId: any) => {
             let value = message[key][0][1];
             let timestamp = message[key][0][0];
             let newDate = new Date(timestamp * 1000 / 1000);
+            // Refer to : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleTimeString
             timestamp = newDate.toLocaleTimeString("en-GB");
             data.push(createTelemetryData(timestamp, key, value));
             keys.push(key[0].toUpperCase() + key.slice(1));
@@ -112,8 +113,17 @@ const getRoomRelationInfos = async () => {
                 devicesData.push(createDeviceData(device['to']['id'], device['toName']));
                 socket.value = new WebSocket(wsFetchTelemetryUrl + token);
                 connect(device['to']['id']);
+                getDeviceAttributes(device['to']['id'], 'DEVICE', 'photoImage', token);
             });
             deviceList.value = devicesData;
+        });
+};
+
+const getDeviceAttributes = async (entityId: any, entityType: any, keys: any, token: any) => {
+    RestApiService.getAttributes(entityId, entityType, keys, token)
+        .then((res) => {
+            //console.log(`getDeviceAttributes - res: ${JSON.stringify(res.data)}`);
+            detailsImageUrl.value = res.data.length > 0 ? res.data[0].value : '../../../src/assets/upload-image-icon.png';
         });
 };
 
@@ -147,6 +157,30 @@ onUnmounted(() => {
     window.removeEventListener('resize', resizeWindow);
 });
 
+const createImageFromBlob = (image: Blob, deviceId: any) => {
+    let reader = new FileReader();
+    reader.onloadend = function () {
+        //console.log('RESULT', reader.result);
+        detailsImageUrl.value = reader.result!.toString();
+        let imageBase64 = { "photoImage": reader.result };
+        const token: any = store.getters.getAuthUserToken['token'];
+        RestApiService.saveDeviceAttributes(deviceId, imageBase64, token)
+            .then((res: any) => {
+                console.log('(Room)saveDeviceAttributes - ', res.status);
+            });
+    }
+
+    if (image) {
+        reader.readAsDataURL(image);
+    }
+}
+const handleFileUpload = (fileToUpload: any, deviceId: any) => {
+    if (fileToUpload.target.files && fileToUpload.target.files[0]) {
+        //console.log("selected file", fileToUpload);
+        createImageFromBlob(fileToUpload.target.files[0], deviceId);
+    }
+}
+
 </script>
 
 <template>
@@ -157,53 +191,56 @@ onUnmounted(() => {
         <div class="main-container">
             <div class="roomId">{{ roomName }}</div>
             <div v-if="deviceList.length > 0">
-                <div class="roomId">
-                    <span style="font-size:15px;">Device name: </span>
-                    <span style="font-size:15px;" v-for="device in deviceList">
-                        {{ device['deviceName'] }} &nbsp;
-                    </span>
-                </div>
-                <div class='noteDiv' v-if="setlastesValue.length > 0 && setlastesValue[1]['value'] > 27"
-                    :style="{ 'background-image': 'url(' + notifyStatusImagesUrl + ')' }"></div>
-                <div class='infos row col-11 mx-auto'>
-                    <div class='detail-image col'>
-                        <input id="upload" :style="{ 'display': 'none' }" type="file" accept=".png, .jpg, .jpeg">
-                        <div class='detailInfoPhoto'>
-                            <input id="upload" style="display:none" type="file" accept=".png, .jpg, .jpeg" />
-                            <img :src="detailsImageUrl" :style="{ 'width': '128px', 'height': '128px' }"
-                                title="Upload your photos" alt="Upload your photos" />
+                <div v-for="device in deviceList">
+                    <div class="roomId">
+                        <span style="font-size:15px;">Device name: </span>
+                        <span style="font-size:15px;">
+                            {{ device['deviceName'] }}
+                        </span>
+                    </div>
+                    <div class='noteDiv' v-if="setlastesValue.length > 0 && setlastesValue[1]['value'] > 27"
+                        :style="{ 'background-image': 'url(' + notifyStatusImagesUrl + ')' }"></div>
+                    <div class='infos row col-11 mx-auto'>
+                        <div class='detail-image col'>
+                            <input id="upload" :style="{ 'display': 'none' }" type="file" accept=".png, .jpg, .jpeg"
+                                @change="handleFileUpload($event, device['deviceId'])" />
+                            <div class='detailInfoPhoto'>
+                                <img :src="detailsImageUrl" :style="{ 'width': '128px', 'height': '128px' }"
+                                    title="Upload your photos" alt="Upload your photos" onclick="upload.click()" />
+                            </div>
+                        </div>
+                        <div class='temperature col'>
+                            <div class='temperatureIcon'
+                                v-if="setlastesValue.length > 0 && setlastesValue[1]['value'] > 27"
+                                :style="{ 'background-image': 'url(' + highTemperatureImageUrl + ')' }">
+                            </div>
+                            <div class='temperatureIcon' v-else
+                                :style="{ 'background-image': 'url(' + temperatureImageUrl + ')' }">
+                            </div>
+                            <div class='temperatureWord' v-if="setlastesValue.length > 0">
+                                <p v-if="setlastesValue[1]['value'] > 27" style="color: #ed250e;">
+                                    {{ setlastesValue[1]['value'] }} °C
+                                </p>
+                                <p v-else style="color: #1c1b1b;"> {{ setlastesValue[1]['value'] }} °C</p>
+                            </div>
+                        </div>
+                        <div class='humidity col'>
+                            <div class='humidityIcon' :style="{ 'background-image': 'url(' + humidityImageUrl + ')' }">
+                            </div>
+                            <div class='humidityWord' v-if="setlastesValue.length > 0">
+                                <p>{{ setlastesValue[0]['value'] }} %</p>
+                            </div>
                         </div>
                     </div>
-                    <div class='temperature col'>
-                        <div class='temperatureIcon' v-if="setlastesValue.length > 0 && setlastesValue[1]['value'] > 27"
-                            :style="{ 'background-image': 'url(' + highTemperatureImageUrl + ')' }">
-                        </div>
-                        <div class='temperatureIcon' v-else
-                            :style="{ 'background-image': 'url(' + temperatureImageUrl + ')' }">
-                        </div>
-                        <div class='temperatureWord' v-if="setlastesValue.length > 0">
-                            <p v-if="setlastesValue[1]['value'] > 27" style="color: #ed250e;">
-                                {{ setlastesValue[1]['value'] }} °C
-                            </p>
-                            <p v-else style="color: #1c1b1b;"> {{ setlastesValue[1]['value'] }} °C</p>
-                        </div>
+                    <div class='linechart-card col-10 mx-auto'>
+                        <GChart type="LineChart" :data="chartData" :options="chartOptions" style="height:320px;" />
                     </div>
-                    <div class='humidity col'>
-                        <div class='humidityIcon' :style="{ 'background-image': 'url(' + humidityImageUrl + ')' }">
+                    <div class="mx-auto col-xs-12 col-sm-10 col-md-10">
+                        <div class="d-grid gap-2 col-10 mx-auto">
+                            <button type="button" class="btn btn-secondary btn-lg">
+                                {{ isDisplayHistory? 'Hide alarm event hsitory': 'Alarm event hsitory' }}
+                            </button>
                         </div>
-                        <div class='humidityWord' v-if="setlastesValue.length > 0">
-                            <p>{{ setlastesValue[0]['value'] }} %</p>
-                        </div>
-                    </div>
-                </div>
-                <div class='linechart-card col-10 mx-auto'>
-                    <GChart type="LineChart" :data="chartData" :options="chartOptions" style="height:320px;" />
-                </div>
-                <div class="mx-auto col-xs-12 col-sm-10 col-md-10">
-                    <div class="d-grid gap-2 col-10 mx-auto">
-                        <button type="button" class="btn btn-secondary btn-lg">
-                            {{ isDisplayHistory? 'Hide alarm event hsitory': 'Alarm event hsitory' }}
-                        </button>
                     </div>
                 </div>
             </div>

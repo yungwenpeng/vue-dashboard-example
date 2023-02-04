@@ -73,7 +73,7 @@ class RestApiService {
         );
     };
     //Returns list of relation info objects for the specified entity by the 'from' direction.
-    findRelationInfoByFrom(fromId:any, fromType:any, token:any): Promise<any>{
+    findRelationInfoByFrom(fromId: any, fromType: any, token: any): Promise<any> {
         return axios.get(
             '/api/relations/info?fromId=' + fromId + '&fromType=' + fromType,
             {
@@ -85,11 +85,37 @@ class RestApiService {
         );
     };
     //Requested assets must be owned by tenant or assigned to customer which user is performing the request.
-    getAssetsByIds(assetIds: any, token:any): Promise<any>{
+    getAssetsByIds(assetIds: any, token: any): Promise<any> {
         return axios.get(
             '/api/assets?assetIds=' + assetIds,
             {
                 headers: {
+                    'Accept': 'application/json',
+                    'X-Authorization': 'Bearer ' + token
+                }
+            }
+        );
+    };
+    //Returns all attributes that belong to specified entity.
+    getAttributes(entityId: any, entityType: any, keys: any, token: any): Promise<any> {
+        return axios.get(
+            '/api/plugins/telemetry/' + entityType + '/' + entityId + '/values/attributes?keys=' + keys,
+            {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Authorization': 'Bearer ' + token
+                }
+            }
+        );
+    };
+    //Creates or updates the device attributes based on device id and specified attribute scope.
+    saveDeviceAttributes(deviceId: any, data: any, token: any): Promise<any> {
+        return axios.post(
+            '/api/plugins/telemetry/' + deviceId + '/SHARED_SCOPE',
+            data,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-Authorization': 'Bearer ' + token
                 }
